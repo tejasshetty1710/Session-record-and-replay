@@ -3,7 +3,7 @@
     "name": "User Journey Recorder",
     "version": "1.0",
     "description": "Records and replays user interactions on a webpage.",
-    "permissions": ["storage", "activeTab"],
+    "permissions": ["storage", "activeTab", "scripting", "tabs"],
     "action": {
       "default_popup": "popup.html"
     },
@@ -15,4 +15,3 @@
       }
     ]
 }
-  
