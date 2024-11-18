@@ -39,10 +39,36 @@ document.addEventListener('DOMContentLoaded', () => {
   
 
   function sendMessageToContentScript(message) {
-    chrome.tabs.sendMessage(tabId, message, (response) => {
-    if (chrome.runtime.lastError) {
-        console.error('Error sending message:', chrome.runtime.lastError.message);
-    }
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id !== undefined) {
+        const tabId = tabs[0].id;  
+        chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
+          if (chrome.runtime.lastError) {
+            chrome.scripting.executeScript(
+              {
+                target: { tabId: tabId },
+                files: ['content.js'],
+              },
+              () => {
+                chrome.tabs.sendMessage(tabId, message, (response) => {
+                  if (chrome.runtime.lastError) {
+                    console.error('Error sending message:', chrome.runtime.lastError.message);
+                  }
+                });
+              }
+            );
+          } else {
+            chrome.tabs.sendMessage(tabId, message, (response) => {
+              if (chrome.runtime.lastError) {
+                console.error('Error sending message:', chrome.runtime.lastError.message);
+              }
+            });
+          }
+        });
+      } else {
+        console.error('No active tab found.');
+      }
     });
   }
+  
   
