@@ -1,28 +1,42 @@
-const startButton = document.getElementById('start-recording');
-const stopButton = document.getElementById('stop-recording');
-const replayButton = document.getElementById('replay-session');
-const statusDisplay = document.getElementById('status');
-
-
-startButton.addEventListener('click', () => {
-    sendMessageToContentScript({ action: 'startRecording' });
-    startButton.disabled = true;
-    stopButton.disabled = false;
-    statusDisplay.innerText = 'Recording...';
+document.addEventListener('DOMContentLoaded', () => {
+    const startButton = document.getElementById('start-recording');
+    const stopButton = document.getElementById('stop-recording');
+    const replayButton = document.getElementById('replay-session');
+    const statusDisplay = document.getElementById('status');
+  
+    // Get the recording status and update the UI
+    getRecordingStatus((isRecording) => {
+      if (isRecording) {
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        statusDisplay.innerText = 'Recording...';
+      } else {
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        statusDisplay.innerText = '';
+      }
+    });
+  
+    startButton.addEventListener('click', () => {
+      sendMessageToContentScript({ action: 'startRecording' });
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      statusDisplay.innerText = 'Recording...';
+    });
+  
+    stopButton.addEventListener('click', () => {
+      sendMessageToContentScript({ action: 'stopRecording' });
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      statusDisplay.innerText = 'Recording stopped.';
+    });
+  
+    replayButton.addEventListener('click', () => {
+      sendMessageToContentScript({ action: 'replaySession' });
+      statusDisplay.innerText = 'Replaying session...';
+    });
   });
-
-  stopButton.addEventListener('click', () => {
-    sendMessageToContentScript({ action: 'stopRecording' });
-    startButton.disabled = false;
-    stopButton.disabled = true;
-    statusDisplay.innerText = 'Recording stopped.';
-  });
-
-  replayButton.addEventListener('click', () => {
-    sendMessageToContentScript({ action: 'replaySession' });
-    statusDisplay.innerText = 'Replaying session...';
-  });
-
+  
 
   function sendMessageToContentScript(message) {
     chrome.tabs.sendMessage(tabId, message, (response) => {
