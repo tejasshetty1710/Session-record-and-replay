@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     stopRecording();
     sendResponse({ status: 'stopped' });
   } else if (request.action === 'replaySession') {
-    replaySession();
+    replaySession(request.sessionId);
     sendResponse({ status: 'replaying' });
   } else {
     sendResponse({ status: 'unknown action' });
@@ -36,15 +36,31 @@ function startRecording() {
 function stopRecording() {
   isRecording = false;
   detachEventListeners();
-  chrome.storage.local.set({ recordedEvents: events });
+
+  const sessionId = Date.now();
+  const session = {
+    id: sessionId,
+    name: `Session ${new Date(sessionId).toLocaleString()}`,
+    events: events
+  };
+
+  chrome.storage.local.get('sessions', (data) => {
+    const sessions = data.sessions || [];
+    sessions.push(session);
+    chrome.storage.local.set({ sessions: sessions });
+    chrome.runtime.sendMessage({ action: 'sessionSaved' });
+  });
 }
 
 
-function replaySession() {
-  chrome.storage.local.get('recordedEvents', (data) => {
-    if (data.recordedEvents && data.recordedEvents.length > 0) {
-      simulateEvents(data.recordedEvents);
+function replaySession(sessionId) {
+  chrome.storage.local.get('sessions', (data) => {
+    const sessions = data.sessions || [];
+    const session = sessions.find((s) => s.id === sessionId);
+    if (session) {
+      simulateEvents(session.events);
     } else {
+      alert('Session not found.');
       chrome.runtime.sendMessage({ action: 'replayFinished' });
     }
   });
@@ -119,33 +135,6 @@ function recordScroll(e) {
   
 function getUniqueSelector(element) {
     return unique(element);
-    // if (element.id) {
-    //   return `#${CSS.escape(element.id)}`;
-    // } else {
-    //   const path = [];
-    //   while (element && element.nodeType === Node.ELEMENT_NODE) {
-    //     let selector = element.nodeName.toLowerCase();
-  
-    //     if (element.className) {
-    //       const classList = Array.from(element.classList).map(cls => `.${CSS.escape(cls)}`);
-    //       selector += classList.join('');
-    //     }
-  
-    //     if (element.parentNode) {
-    //       const siblings = Array.from(element.parentNode.children).filter(
-    //         sibling => sibling.nodeName === element.nodeName
-    //       );
-    //       if (siblings.length > 1) {
-    //         const index = siblings.indexOf(element) + 1;
-    //         selector += `:nth-of-type(${index})`;
-    //       }
-    //     }
-  
-    //     path.unshift(selector);
-    //     element = element.parentNode;
-    //   }
-    //   return path.join(' > ');
-    // }
 }
 
   
@@ -157,6 +146,10 @@ function getUniqueSelector(element) {
     function next() {
         if (index >= eventList.length) {
             chrome.runtime.sendMessage({ action: 'replayFinished' });
+            if (chrome.runtime.lastError) {
+              // No receiver; handle if necessary
+              console.warn('No receiver for replayFinished message:', chrome.runtime.lastError.message);
+            }
             return;
           }
   
