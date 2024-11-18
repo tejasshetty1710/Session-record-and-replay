@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "User Journey Recorder",
+  "version": "1.0",
+  "description": "Records and replays user interactions on a webpage.",
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.bundle.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const replayButton = document.getElementById('replay-session');
     const statusDisplay = document.getElementById('status');
   
-    // Get the recording status and update the UI
     getRecordingStatus((isRecording) => {
       if (isRecording) {
         startButton.disabled = true;
@@ -35,19 +34,60 @@ document.addEventListener('DOMContentLoaded', () => {
       sendMessageToContentScript({ action: 'replaySession' });
       statusDisplay.innerText = 'Replaying session...';
     });
+  
+    // Listen for messages from content script
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.action === 'replayFinished') {
+        statusDisplay.innerText = 'Replay finished.';
+      }
+    });
   });
   
-
+  function getRecordingStatus(callback) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id !== undefined) {
+        const tabId = tabs[0].id;
+  
+        chrome.tabs.sendMessage(tabId, { action: 'getStatus' }, (response) => {
+          if (chrome.runtime.lastError) {
+            chrome.scripting.executeScript(
+              {
+                target: { tabId: tabId },
+                files: ['content.bundle.js'],
+              },
+              () => {
+                chrome.tabs.sendMessage(tabId, { action: 'getStatus' }, (response) => {
+                  if (chrome.runtime.lastError) {
+                    console.error('Error getting status:', chrome.runtime.lastError.message);
+                    callback(false);
+                  } else {
+                    callback(response.isRecording);
+                  }
+                });
+              }
+            );
+          } else {
+            callback(response.isRecording);
+          }
+        });
+      } else {
+        console.error('No active tab found.');
+        callback(false);
+      }
+    });
+  }
+  
   function sendMessageToContentScript(message) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id !== undefined) {
-        const tabId = tabs[0].id;  
+        const tabId = tabs[0].id;
+  
         chrome.tabs.sendMessage(tabId, { action: 'ping' }, (response) => {
           if (chrome.runtime.lastError) {
             chrome.scripting.executeScript(
               {
                 target: { tabId: tabId },
-                files: ['content.js'],
+                files: ['content.bundle.js'],
               },
               () => {
                 chrome.tabs.sendMessage(tabId, message, (response) => {
@@ -70,5 +110,3 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
-  
