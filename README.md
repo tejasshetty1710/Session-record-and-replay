@@ -85,6 +85,7 @@ This will generate the bundled scripts and assets in the `dist/` directory.
 ### Handle Complex Events
 - Support more event types
 - Improve async action handling
+- Explore mutation observer API, to handle dynamic content changes
 
 ### Add authentication
 - Add a login page, so that users can login using their google account, and their sessions are saved in the cloud
@@ -95,10 +96,6 @@ This will generate the bundled scripts and assets in the `dist/` directory.
 
 ### Cross-Domain Recording
 - Investigate cross-domain solutions
-
-### Background Script Enhancements
-- Manage notifications/alerts
-- Implement long-lived connections
 
 ### Error Handling and Reporting
 - Provide detailed error messages
@@ -111,10 +108,3 @@ This will generate the bundled scripts and assets in the `dist/` directory.
 ### Extension Settings
 - Add configuration page
 - Enable event type toggles
-
-### Testing and Compatibility
-- Test across various websites
-- Ensure browser compatibility
-
-## Contributing
-Contributions are welcome! Please submit issues, feature requests, or pull requests.
