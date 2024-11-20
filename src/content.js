@@ -114,17 +114,17 @@ function recordScroll(e) {
   scrollTimeouts.set(
     target,
     setTimeout(() => {
-      const scrollX = target.scrollLeft;
-      const scrollY = target.scrollTop;
-
-      console.log('recordScroll', scrollX, scrollY);
+      const isDocumentScroll = target === document || target === document.documentElement;
+      const scrollX = isDocumentScroll ? window.scrollX : target.scrollLeft;
+      const scrollY = isDocumentScroll ? window.scrollY : target.scrollTop;
 
       events.push({
         type: 'scroll',
         timestamp: Date.now(),
-        selector: getUniqueSelector(target),
+        selector: isDocumentScroll ? 'window' : getUniqueSelector(target),
         scrollX: scrollX,
-        scrollY: scrollY
+        scrollY: scrollY,
+        isDocumentScroll
       });
 
       scrollTimeouts.delete(target);
@@ -169,6 +169,13 @@ function getUniqueSelector(element) {
   
   function simulateEvent(event) {
     if (event.type === 'scroll') {
+      if (event.isDocumentScroll) {
+        window.scrollTo({
+          left: event.scrollX,
+          top: event.scrollY,
+          behavior: 'smooth'
+        });
+      } else {
         const element = document.querySelector(event.selector);
         if (element) {
           element.scrollTo({
@@ -177,7 +184,8 @@ function getUniqueSelector(element) {
             behavior: 'smooth'
           });
         }
-      } else {
+      }
+    } else {
       const element = document.querySelector(event.selector);
       console.log('simulateEvent', event, element);
       if (element) {
