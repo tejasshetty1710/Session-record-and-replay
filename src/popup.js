@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('start-recording');
     const stopButton = document.getElementById('stop-recording');
-    const replayButton = document.getElementById('replay-session');
     const statusDisplay = document.getElementById('status');
-    // const sessionsList = document.getElementById('sessions-list');
   
     getRecordingStatus((isRecording) => {
       if (isRecording) {
@@ -31,25 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
       startButton.disabled = false;
       stopButton.disabled = true;
       statusDisplay.innerText = 'Recording stopped.';
-      setTimeout(() => {
-        loadSessions();
-      }, 10);
-    });
-  
-    replayButton.addEventListener('click', () => {
-      sendMessageToContentScript({ action: 'replaySession' });
-      statusDisplay.innerText = 'Replaying session...';
-    });
-  
-    // Listen for messages from content script
-    chrome.runtime.onMessage.addListener((message) => {
-      console.log('popup.js received message:', message);
-      if (message.action === 'replayFinished') {
-        statusDisplay.innerText = 'Replay finished.';
-      }
-      if (message.action === 'sessionSaved') {
-        loadSessions();
-      }
+      chrome.runtime.onMessage.addListener((message) => {
+        if (message.action === 'sessionSaved') {
+          loadSessions();
+        }
+      });
     });
   });
   
@@ -120,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessageToContentScript({ action: 'replaySession', sessionId: sessionId });
     const statusDisplay = document.getElementById('status');
     statusDisplay.innerText = 'Replaying session...';
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.action === 'replayFinished') {
+        statusDisplay.innerText = 'Replay finished.';
+      }
+    });
   }
   
   function deleteSession(sessionId) {

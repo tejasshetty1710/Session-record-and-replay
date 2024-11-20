@@ -6,7 +6,6 @@ module.exports = {
   entry: {
     content: './src/content.js',
     popup: './src/popup.js',
-    background: './src/background.js',
   },
   devtool: 'source-map',
   output: {
